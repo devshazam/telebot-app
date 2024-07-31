@@ -3,7 +3,7 @@
 
 import React, { useContext, useEffect, useState } from "react";
 
-import { Select, Space,  Button , Steps, Spin} from 'antd';
+import { Select, Space,  Button , Steps, Spin, Flex, Form} from 'antd';
 
 // import Col from "react-bootstrap/Col";
 // import Form from "react-bootstrap/Form";
@@ -14,7 +14,7 @@ import { Select, Space,  Button , Steps, Spin} from 'antd';
 // import FloatingLabel from "react-bootstrap/FloatingLabel";
 
 // import SendToBasket from "../../components/basket/SendToBasket";
-
+import Marquee from "react-fast-marquee";
 
 import { fetchPriceOfProduce, payForGoods } from "@/http/jsonAPI";
 
@@ -25,8 +25,7 @@ declare global {
 }
 
 export default function Home() {
-  const [flag, setFlag] = useState<any>(0);
-  const [user, setUser] = useState<any>(null);
+
   const [vizit, setVizit] = useState([]);
   const [value, setValue] = useState(0);
   const [side, setSide] = useState("0");
@@ -35,33 +34,20 @@ export default function Home() {
   const [num, setNum] = useState("0");
   const [description, setDescription] = useState(""); // Телефон
   const name = "Визитки";
-  const goodsId = "0";
   const vizSize = ["односторонние", "двусторонние"];
   const vizVid = ["матовая", "глянцевая", "дизайнерская"];
   const vizLam = ["без ламинации", "глянцевая", "матовая"];
   const vizNum = ["96", "200", "500", "1000"];
   // console.log(vizit);
 
-  function payForBasket2() {
-    if(window && window.Telegram){
-      let tg = window.Telegram.WebApp; //получаем объект webapp телеграма 
 
-      // const mainButton = window.Telegram.WebApp.MainButton;
-      // mainButton.text = "Готово";
-      // mainButton.enable();
-      // mainButton.show();
-      // and make it send the "foods" object (as JSON string) back to the backend
-      // tg.sendData(JSON.stringify({"dfd": "dfd"}));
-
-      tg.sendData(JSON.stringify({ name: "Визитки", value, description }));
-
-      // mainButton.onClick(function(){
-      // })
-
-
-    }
-
-  }
+  const onFinish = (values: any) => {
+    // console.log({ name: "Баннер", value, description })
+      if (window && window.Telegram) {
+          let tg = window.Telegram.WebApp; //получаем объект webapp телеграма
+          tg.sendData(JSON.stringify({ name: "Визитки", value, description }));
+      }
+  };
 
   useEffect(() => {
       fetchPriceOfProduce({ jsonId: 2 })
@@ -82,7 +68,7 @@ export default function Home() {
 
   useEffect(() => {
       if (vizit.length == 0) return;
-      setValue(vizit[+side][+vid][+lam][+num]);
+      setValue(+vizit[+side][+vid][+lam][+num]);
       setDescription(
           `Наименование: ${name}; Цена: ${value} рублей; Кол-во сторон печати: ${
               vizSize[+side]
@@ -93,118 +79,166 @@ export default function Home() {
   }, [value, side, num, lam, vid, vizit]); // <- add the count variable here
 
 
-  function payForBasket(value:any) {
-    if(!user){
-      alert("Вы не авторизированы!");
-      return;
-    };
-    payForGoods({ value, userId: user[2], description })
-        .then((data:any) => {
-            console.log(data.id);
-            window.location.href = data.confirmation.confirmation_url;
-        })
-        .catch((error:any) => {
-            if (error.response.data) {
-                alert(
-                    `${error.response.data.message}${error.response.status}`
-                );
-            } else {
-                console.log("dev", error);
-                alert("Ошибка 130 - Обратитесь к администратору!");
-            }
-        });
-  }
+
 
 
   return (
 
         <>
-        <h1 style={{fontSize: 50, margin: '4px'}}>Визитки</h1>
-                        <img src="/icons8-robot-100.png" alt='map' style={{display: "inline-block"}}/>
-                        {
-                          !value ?
-                        <Spin size="large" />
-                          :
-                        <h1 style={{fontSize: 60, display: "inline-block"}}>{value}</h1>
-                        }
-                      <Space direction="vertical" style={{ width: '100%' }}>
+
+                      <Marquee pauseOnHover gradient={false}>
+                <h1
+                    style={{
+                        fontSize: 25,
+                        margin: "4px",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    расчет <span style={{ color: "#37a700" }}>цены</span>{" "}
+                    визитки
+                </h1>
+            </Marquee>
+
+            <Flex
+                justify={"center"}
+                align={"center"}
+                style={{ marginTop: "30px", marginBottom: "30px", height: 120 }}
+                vertical
+            >
+                {!value ? (
+                    <Spin size="large" />
+                ) : (
+                    <>
+                        <h1 style={{ fontSize: 60 }}>{value}</h1>
+                        <p style={{ fontSize: 18 }}>рублей</p>
+                    </>
+                )}
+            </Flex>
 
 
-                            <Select
-                                // style={{ width: 120 }}
-                                onChange={(e:any) =>
-                                  setSide(e)
-                              }
+
+            <Form
+                name="trigger"
+                style={{ width: "100%" }}
+                layout="vertical"
+                autoComplete="off"
+                onFinish={onFinish}
+                scrollToFirstError
+            >
+
+
+
+
+
+                <Form.Item
+                    hasFeedback
+                    label="Стороны печати:"
+                    name="side"
+                    initialValue={side}
+                    validateFirst
+                >
+                        <Select
+                            // style={{ width: 120 }}
+                            placeholder="Стороны печати:"
+                            onChange={(e:any) =>
+                              setSide(e)
+                          }
+                          style={{ width: '100%' }}
+                          value={side}
+                            options={[
+                              { value: '0', label: 'Односторонние' },
+                              { value: '1', label: 'Двусторонние' },
+                              // { value: 'disabled', label: 'Disabled', disabled: true },
+                            ]}
+                          />
+                </Form.Item>
+                <Form.Item
+                    hasFeedback
+                    label="Бумага:"
+                    name="vid"
+                    initialValue={vid}
+                    validateFirst
+                >
+                    <Select
+                            // style={{ width: 120 }}
+                            placeholder="Бумага:"
+                            onChange={(e:any) => setVid(e)}
+                            value={vid}
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '0', label: 'Матовая' },
+                              { value: '1', label: 'Глянцевая' },
+                              { value: '2', label: 'Дизайнерская' },
+                              // { value: 'disabled', label: 'Disabled', disabled: true },
+                            ]}
+                          />
+                </Form.Item>
+
+
+
+                <Form.Item
+                    hasFeedback
+                    label="Ламинация:"
+                    name="lam"
+                    initialValue={lam}
+                    validateFirst
+                >
+                      <Select
+                              placeholder="Ламинация:"
+                              // style={{ width: 120 }}
+                              onChange={(e:any) => setLam(e)}
+                              value={lam}
                               style={{ width: '100%' }}
-                              value={side}
-                                options={[
-                                  { value: '0', label: 'Односторонние' },
-                                  { value: '1', label: 'Двусторонние' },
-                                  // { value: 'disabled', label: 'Disabled', disabled: true },
-                                ]}
-                              />
-                            <Select
-                                    // style={{ width: 120 }}
-                                    onChange={(e:any) => setVid(e)}
-                                    value={vid}
-                                    style={{ width: '100%' }}
-                                    options={[
-                                      { value: '0', label: 'Матовая' },
-                                      { value: '1', label: 'Глянцевая' },
-                                      { value: '2', label: 'Дизайнерская' },
-                                      // { value: 'disabled', label: 'Disabled', disabled: true },
-                                    ]}
-                                  />
-                            <Select
-                                    // style={{ width: 120 }}
-                                    onChange={(e:any) => setLam(e)}
-                                    value={lam}
-                                    style={{ width: '100%' }}
-                                    options={[
-                                      { value: '0', label: 'Без ламинации' },
-                                      { value: '1', label: 'Глянцевая' },
-                                      { value: '2', label: 'Матовая' },
-                                      // { value: 'disabled', label: 'Disabled', disabled: true },
-                                    ]}
-                                  />
-                            <Select
-                                    // style={{ width: 120 }}
-                                    onChange={(e:any) => setNum(e)}
+                              options={[
+                                { value: '0', label: 'Без ламинации' },
+                                { value: '1', label: 'Глянцевая' },
+                                { value: '2', label: 'Матовая' },
+                                // { value: 'disabled', label: 'Disabled', disabled: true },
+                              ]}
+                            />
+                </Form.Item>
+
+
+
+                <Form.Item
+                    hasFeedback
+                    label="Кол-во:"
+                    name="num"
+                    initialValue={num}
+                    validateFirst
+                >
+                    <Select
+                        placeholder="Кол-во:"
+                        // style={{ width: 120 }}
+                        onChange={(e:any) => setNum(e)}
                                     value={num}
-                                    style={{ width: '100%' }}
-                                    options={[
-                                      { value: '0', label: '96' },
-                                      { value: '1', label: '200' },
-                                      { value: '2', label: '500' },
-                                      { value: '3', label: '1000' },
-                                      // { value: 'disabled', label: 'Disabled', disabled: true },
-                                    ]}
-                                  />
-                                  <Button type="primary" block  onClick={payForBasket2}>
-                                      Заказать
-                                    </Button>
+                        style={{ width: "100%" }}
+                        options={[
+                          { value: '0', label: '96' },
+                          { value: '1', label: '200' },
+                          { value: '2', label: '500' },
+                          { value: '3', label: '1000' },
+                          // { value: 'disabled', label: 'Disabled', disabled: true },
+                        ]}
+                    />
+                </Form.Item>
+
+
+
+                  <Button
+                    type="primary"
+                    block
+                    // onClick={payForBasket2}
+                    htmlType="submit"
+                >
+                    Заказать
+                </Button>
+            </Form>
+
+
+
       <p>* Все цены действуют только в Телеграм!</p>
-      </Space>
 
-
-      {/* <Steps
-    current={1}
-    items={[
-      {
-        title: 'Finished',
-        description,
-      },
-      {
-        title: 'In Progress',
-        description,
-        subTitle: 'Left 00:00:08',
-      },
-      {
-        title: 'Waiting',
-        description,
-      },
-    ]}
-  /> */}
         </>
   );
 }

@@ -3,7 +3,7 @@
 
 import React, { useContext, useEffect, useState } from "react";
 
-import { Select, Space,  Button , Steps, Spin, Input, Typography} from 'antd';
+import { Select, Space,  Button , Steps, Spin, Flex, Form, InputNumber} from 'antd';
 
 // import Col from "react-bootstrap/Col";
 // import Form from "react-bootstrap/Form";
@@ -14,7 +14,7 @@ import { Select, Space,  Button , Steps, Spin, Input, Typography} from 'antd';
 // import FloatingLabel from "react-bootstrap/FloatingLabel";
 
 // import SendToBasket from "../../components/basket/SendToBasket";
-
+import Marquee from "react-fast-marquee";
 
 import { fetchPriceOfProduce, payForGoods } from "@/http/jsonAPI";
 
@@ -24,128 +24,166 @@ declare global {
   }
 }
 
-export default function Home() {
-  const formatToImage = ['1.jpg', '2.jpg'];
-  const formatToSize = ['37 mm', '56 mm'];
-  const formatToPrice = [[45, 50, 55, 60, 65, 70, 80], [55, 60, 65, 70, 75, 80, 90]];
-  const salesArray = [500, 300, 100, 50, 10, 5, 0];
-  const name = "Значки";
-  const goodsId = "19";
+const formatToImage = ['1.jpg', '2.jpg'];
+const formatToSize = ['37 mm', '56 mm'];
+const formatToPrice = [[45, 50, 55, 60, 65, 70, 80], [55, 60, 65, 70, 75, 80, 90]];
+const salesArray = [500, 300, 100, 50, 10, 5, 0];
+const name = "Значки";
+const goodsId = "19";
 
-  const [mainObject, setMainObject] = useState<any>({
-    format: "0",
-    number: "1",
-});
-const [value, setValue] = useState(0); // цена товара - расчитаная
-const [description, setDescription] = useState("");
+export default function Badge() {
 
-  function payForBasket2() {
-    if(window && window.Telegram){
-      let tg = window.Telegram.WebApp; //получаем объект webapp телеграма 
+    const [mainObject, setMainObject] = useState<any>({
+        format: "0",
+        number: 1,
+    });
+    const [value, setValue] = useState(0); // цена товара - расчитаная
+    const [description, setDescription] = useState("");
 
-      // const mainButton = window.Telegram.WebApp.MainButton;
-      // mainButton.text = "Готово";
-      // mainButton.enable();
-      // mainButton.show();
-      // and make it send the "foods" object (as JSON string) back to the backend
-      // tg.sendData(JSON.stringify({"dfd": "dfd"}));
 
-      tg.sendData(JSON.stringify({ name: "Значки", value, description }));
+    useEffect(() => {
+        if (!mainObject.number) return;
+        if (!Number.isInteger(+mainObject.number)) {
+            alert("Введите только целое число!");
+            return;
+        }
 
-      // mainButton.onClick(function(){
-      // })
-    }
-  }
+        setValue(formatToPrice[+mainObject.format][salesArray.findIndex((elem) => +mainObject.number >= elem)] * mainObject.number);
 
-  useEffect(() => {
-    if (!mainObject.number) return;
-    if (!Number.isInteger(+mainObject.number)) {
-        alert("Введите только целое число!");
-        return;
-    }
+        setDescription(
+            `Наименование: ${name}; Цена: ${value} рублей; Формат: ${formatToSize[mainObject.format]}; Кол-во: ${mainObject.number}`
+        );
+    }, [JSON.stringify(mainObject)]); // <- add the count variable here
 
-    setValue(formatToPrice[mainObject.format][salesArray.findIndex((elem) => +mainObject.number >= elem)] * mainObject.number);
 
-    setDescription(
-        `Наименование: ${name}; Цена: ${value} рублей; Формат: ${formatToSize[mainObject.format]}; Кол-во: ${mainObject.number}`
-    );
-}, [JSON.stringify(mainObject)]); // <- add the count variable here
+  const onFinish = (values: any) => {
+    // console.log({ name: "Баннер", value, description })
+      if (window && window.Telegram) {
+          let tg = window.Telegram.WebApp; //получаем объект webapp телеграма
+          tg.sendData(JSON.stringify({ name: "Значки", value, description }));
+      }
+  };
+
   return (
 
         <>
-        <h1 style={{fontSize: 50, margin: '4px'}}>Значки</h1>
-                        <img src="/icons8-robot-100.png" alt='map' style={{display: "inline-block"}}/>
-                        {
-                          !value ?
-                        <Spin size="large" />
-                          :
-                        <h1 style={{fontSize: 60, display: "inline-block"}}>{value}</h1>
+
+                      <Marquee pauseOnHover gradient={false}>
+                <h1
+                    style={{
+                        fontSize: 25,
+                        margin: "4px",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    расчет <span style={{ color: "#37a700" }}>цены</span>{" "}
+                    Значков
+                </h1>
+            </Marquee>
+
+            <Flex
+                justify={"center"}
+                align={"center"}
+                style={{ marginTop: "30px", marginBottom: "30px", height: 120 }}
+                vertical
+            >
+                {!value ? (
+                    <Spin size="large" />
+                ) : (
+                    <>
+                        <h1 style={{ fontSize: 60 }}>{value}</h1>
+                        <p style={{ fontSize: 18 }}>рублей</p>
+                    </>
+                )}
+            </Flex>
+
+
+
+            <Form
+                name="trigger"
+                style={{ width: "100%" }}
+                layout="vertical"
+                autoComplete="off"
+                onFinish={onFinish}
+                scrollToFirstError
+            >
+
+
+
+
+
+                <Form.Item
+                    hasFeedback
+                    label="Формат:"
+                    name="format"
+                    initialValue={mainObject.format}
+                    validateFirst
+                >
+                        <Select
+                            // style={{ width: 120 }}
+                            placeholder="Стороны печати:"
+                          style={{ width: '100%' }}
+                          onChange={(e) =>
+                            setMainObject({
+                                ...mainObject,
+                                format: e,
+                            })
                         }
-                      <Space direction="vertical" style={{ width: '100%' }}>
-                        <div>
-                            <Typography.Title level={5}>Шаг люверсов**:</Typography.Title>
-                            <Select
-                                placeholder="Шаг люверсов**:"
-                                // style={{ width: 120 }}
-                                onChange={(e) =>
-                                  setMainObject({
-                                      ...mainObject,
-                                      format: e,
-                                  })
-                              }
-                              value={mainObject.format}
-                                  // value={luversStep}
-                                    style={{ width: '100%' }}
-                                    options={[
-                                      { value: '0', label: '37 mm.' },
-                                      { value: '1', label: '56 mm.' },
-                                      // { value: 'disabled', label: 'Disabled', disabled: true },
-                                    ]}
-                                  />
-                        </div>
-                        <div>
-                            <Typography.Title level={5}>Кол-во баннеров:</Typography.Title>
-                              <Input 
-                                placeholder="Шт."
-                                value={mainObject.number}
-                                onChange={(e) =>
-                                    setMainObject({
-                                        ...mainObject,
-                                        number: e.target.value,
-                                    })
-                                }
-                                style={{ width: '100%' }}
-                              />
+                        value={mainObject.format}
+                            options={[
+                              { value: '0', label: '37 mm.' },
+                              { value: '1', label: '56 mm.' },
+                              // { value: 'disabled', label: 'Disabled', disabled: true },
+                            ]}
+                          />
+                </Form.Item>
 
-                        </div>
+                <Form.Item
+                    hasFeedback
+                    label="Кол-во:"
+                    name="number"
+                    initialValue={mainObject.number}
+                    validateFirst
+                    rules={[
+                        {
+                            required: true,
+                            message: "Это обязательное поле!",
+                        },
+                        {
+                            type: "integer",
+                            message: "Это поле должно быть целым числом",
+                        },
+                    ]}
+                >
+                    <InputNumber
+                        style={{ width: "100%" }}
+                        placeholder="Шт."
+                        value={mainObject.number}
+                        onChange={(e) =>
+                            setMainObject({
+                                ...mainObject,
+                                number: e,
+                            })
+                        }
+                    />
+                </Form.Item>
 
 
 
-                                  <Button type="primary" block  onClick={payForBasket2}>
-                                      Заказать
-                                    </Button>
+                  <Button
+                    type="primary"
+                    block
+                    // onClick={payForBasket2}
+                    htmlType="submit"
+                >
+                    Заказать
+                </Button>
+            </Form>
+
+
+
       <p>* Все цены действуют только в Телеграм!</p>
-      </Space>
 
-
-      {/* <Steps
-    current={1}
-    items={[
-      {
-        title: 'Finished',
-        description,
-      },
-      {
-        title: 'In Progress',
-        description,
-        subTitle: 'Left 00:00:08',
-      },
-      {
-        title: 'Waiting',
-        description,
-      },
-    ]}
-  /> */}
         </>
   );
 }
